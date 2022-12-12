@@ -1,0 +1,134 @@
+php artisan make:controller EmployeeController
+
+use App\Models\Employee;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\File;
+
+{
+    public function index(){
+        return view('employee');
+    }
+
+    public function store(Request $request){
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255',
+            'phone' => 'required|max:255',
+            'image' => 'image|mimes:jpg,bmp,png|max:2048'
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status'=>400,
+                'error'=>$validator->messages(),
+            ]);
+        }
+        else{
+            $employee = new Employee;
+            $employee->name = $request->input('name');
+            $employee->phone = $request->input('phone');
+
+            if($request->hasfile('image')){
+                $file = $request->file('image');
+                $extension = $file->getClientOriginalExtension();
+                $filename = time() . '.' .$extension;
+                $file->move('uploads/employee/',$filename);
+                $employee->image = $filename;
+            }
+            $employee->save();
+
+            return response()->json([
+                'status'=>200,
+                'message'=>'Done'
+            ]);
+        }
+    }
+
+    public function fetch_employee(){
+        $employee = Employee::all();
+        return response()->json([
+            'employee'=>$employee,
+        ]);
+    }
+
+    public function edit($id){
+        $employee = Employee::find($id);
+        if($employee){
+            return response()->json([
+                'status'=>200,
+                'employee'=>$employee
+            ]);
+        }
+        else{
+            return response()->json([
+                'status'=>404,
+                'message'=>'not found'
+            ]);
+        }
+    }
+    public function update(Request $request, $id){
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255',
+            'phone' => 'required|max:255',
+            'image' => 'image|mimes:jpg,bmp,png|max:2048'
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'status'=>400,
+                'error'=>$validator->messages(),
+            ]);
+        }
+        else{
+            $employee = Employee::find($id);
+            if($employee){
+                $employee->name = $request->input('name');
+                $employee->phone = $request->input('phone');
+    
+                if($request->hasfile('image')){
+                    $path = "uploads/employee/".$employee->image;
+                    if(File::exists($path)){
+                        File::delete($path);
+                    }
+                    $file = $request->file('image');
+                    $extension = $file->getClientOriginalExtension();
+                    $filename = time() . '.' .$extension;
+                    $file->move('uploads/employee/',$filename);
+                    $employee->image = $filename;
+                }
+                $employee->save();
+    
+                return response()->json([
+                    'status'=>200,
+                    'message'=>'Done'
+                ]);
+            }
+            else{
+                return response()->json([
+                    'status'=>404,
+                    'message'=>'not found'
+                ]); 
+            }
+
+        }
+    }
+
+    public function destroy($id){
+        $employee = Employee::find($id);
+        if($employee){
+            $path = "uploads/employee/".$employee->image;
+            if(File::exists($path)){
+                File::delete($path);
+            }
+            $employee->delete();
+            return response()->json([
+                'status'=>200,
+                'message'=>'Deleted'
+            ]);
+        }
+        else{
+            return response()->json([
+                'status'=>404,
+                'message'=>'not found'
+            ]);
+        }
+    }
+
+}

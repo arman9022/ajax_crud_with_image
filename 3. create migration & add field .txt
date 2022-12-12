@@ -1,0 +1,7 @@
+php artisan make:migration create_employees_table
+
+            $table->string('name');
+            $table->string('phone');
+            $table->string('image');
+
+php artisan migrate

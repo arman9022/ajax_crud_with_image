@@ -1,0 +1,8 @@
+php artisan make:model Employee
+
+    protected $table = 'employees';
+    protected $fillable = [
+        'name',
+        'phone',
+        'image'
+    ];
